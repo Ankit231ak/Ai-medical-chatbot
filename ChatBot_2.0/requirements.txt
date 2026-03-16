@@ -1,0 +1,4 @@
+gradio
+groq
+python-dotenv
+gradio_client
