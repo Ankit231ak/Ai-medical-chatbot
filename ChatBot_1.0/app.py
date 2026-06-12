@@ -50,6 +50,7 @@ with gr.Blocks(title="AI Medical Assistant") as app:
             safe_text_chat,
             inputs=text_input,
             outputs=text_output,
+            api_name="chat"
         ).then(
             create_voice,
             inputs=text_output,
@@ -67,6 +68,7 @@ with gr.Blocks(title="AI Medical Assistant") as app:
             safe_analyze_image,
             inputs=image_input,
             outputs=image_output,
+            api_name="skin"
         ).then(
             create_voice,
             inputs=image_output,
@@ -74,4 +76,3 @@ with gr.Blocks(title="AI Medical Assistant") as app:
         )
 
 app.launch()
-

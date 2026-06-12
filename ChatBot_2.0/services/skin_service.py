@@ -8,7 +8,23 @@ load_dotenv()
 _GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 groq_client = Groq(api_key=_GROQ_API_KEY) if _GROQ_API_KEY else None
 
-hf_client = Client("Nine231/skin-disease-detector")
+_hf_client: Client | None = None
+
+
+def _get_hf_client() -> Client:
+    """
+    Create the Hugging Face Space client lazily so the whole app
+    doesn't crash if the Space is slow/unreachable during startup.
+    """
+    global _hf_client
+    if _hf_client is not None:
+        return _hf_client
+
+    # Increase read/connect timeouts for slow HF Spaces.
+    # gradio_client uses httpx under the hood.
+    os.environ.setdefault("GRADIO_CLIENT_TIMEOUT", "120")
+    _hf_client = Client("Nine231/skin-disease-detector")
+    return _hf_client
 
 
 def analyze_skin(image_path):
@@ -16,12 +32,19 @@ def analyze_skin(image_path):
         return "No image", "Please upload a skin image."
 
     try:
+        hf_client = _get_hf_client()
         result = hf_client.predict(
             image=handle_file(image_path),
             api_name="/predict"
         )
         disease = result[0] if isinstance(result, list) else result
     except Exception as e:
+        msg = str(e)
+        if "ReadTimeout" in msg or "timed out" in msg.lower():
+            return (
+                "Detection timeout",
+                "Skin detection service is taking too long to respond right now. Please try again in a minute.",
+            )
         return "Detection failed", f"Error analyzing image: {str(e)}"
 
     if not _GROQ_API_KEY:
