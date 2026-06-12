@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+tempCodeRunnerFile.py
+.gradio/
+.venv/
+node_modules/

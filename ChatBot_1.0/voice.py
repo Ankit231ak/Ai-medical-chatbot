@@ -6,15 +6,14 @@ import re
 VOICE = "en-IN-NeerjaNeural"
 
 
-def clean_text(text):
-    text = re.sub(r"[*_`#\-]", "", text)
-    text = re.sub(r"[(),]", "", text)
-    text = re.sub(r"\s+", " ", text)
+def _clean_text(text: str) -> str:
+    # Basic cleanup to make TTS output better.
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
-    return text.strip()
 
-async def create_audio(text):
-    text = clean_text(text)
+async def _create_audio(text: str) -> str:
+    text = _clean_text(text)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
         filename = f.name
 
@@ -23,5 +22,12 @@ async def create_audio(text):
     return filename
 
 
-def generate_voice(text):
-    return asyncio.run(create_audio(text))
+def generate_voice(text: str):
+    """Gradio Audio expects a filepath/URL.
+
+    Returns a tuple because Gradio sometimes chains outputs.
+    """
+    if text is None:
+        return None
+    return asyncio.run(_create_audio(text))
+

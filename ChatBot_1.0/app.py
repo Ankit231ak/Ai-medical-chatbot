@@ -2,40 +2,44 @@ import gradio as gr
 from medical_ai import text_chat, image_analysis
 from voice import generate_voice
 
-# Text chat
-def get_text(user_message):
+
+def safe_text_chat(user_message: str):
     if not user_message:
-        return "Please enter your problem.", None
-    response = text_chat(user_message)
-    return response, response
+        return "Please enter your problem."
+    try:
+        return text_chat(user_message)
+    except Exception as e:
+        return f"Error: {e}"
 
-def create_voice(text):
-    if text is None:
+
+def safe_analyze_image(image_path: str):
+    if not image_path:
+        return "Please upload an image."
+    try:
+        disease, explanation = image_analysis(image_path)
+        return f"Detected Disease: {disease}\n\nExplanation:\n{explanation}"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+def create_voice(text: str):
+    if not text or text.startswith("Error:") or text.startswith("Please"):
         return None
-    
-    return generate_voice(text)
-
-# Image analysis
-def analyze_image(image):
-
-    if image is None:
-        return "Please upload an image.", None
-
-    disease, explanation = image_analysis(image)
-    result = f"Detected Disease: {disease}\n\nExplanation:\n{explanation}"
-    return result, explanation
+    try:
+        return generate_voice(text)
+    except Exception:
+        return None
 
 
 with gr.Blocks(title="AI Medical Assistant") as app:
     gr.Markdown("# 🩺 AI Medical Chatbot")
     gr.Markdown("Text Consultation • Skin Disease Detection")
 
-    #Text tab
+    # Text tab
     with gr.Tab("Medical Chat"):
-
         text_input = gr.Textbox(
             label="Describe your health problem",
-            placeholder="Example: I have headache and fever"
+            placeholder="Example: I have headache and fever",
         )
 
         text_output = gr.Textbox(label="AI Advice")
@@ -43,31 +47,31 @@ with gr.Blocks(title="AI Medical Assistant") as app:
         ask_btn = gr.Button("Ask AI")
 
         ask_btn.click(
-            get_text,
+            safe_text_chat,
             inputs=text_input,
-            outputs=[text_output, text_output]
+            outputs=text_output,
         ).then(
             create_voice,
             inputs=text_output,
-            outputs=audio_output
+            outputs=audio_output,
         )
 
     # Image tab
     with gr.Tab("Skin Disease Detection"):
-
         image_input = gr.Image(type="filepath")
         image_output = gr.Textbox(label="Result")
         audio_output2 = gr.Audio(label="Voice Explanation", autoplay=True)
         analyze_btn = gr.Button("Analyze Skin")
 
         analyze_btn.click(
-            analyze_image,
+            safe_analyze_image,
             inputs=image_input,
-            outputs=[image_output, image_output]
+            outputs=image_output,
         ).then(
             create_voice,
             inputs=image_output,
-            outputs=audio_output2
+            outputs=audio_output2,
         )
 
 app.launch()
+

@@ -4,15 +4,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+_GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+client = Groq(api_key=_GROQ_API_KEY) if _GROQ_API_KEY else None
 
 
 def medical_chat(message, history):
+    if not _GROQ_API_KEY:
+        return "Error: Missing GROQ_API_KEY in .env. Please add it to use the chatbot."
+
+    if not message or message.strip() == "":
+        return "Please describe your symptoms."
 
     messages = [
         {
             "role": "system",
-            # "content": "You are a helpful medical assistant. Provide clear and concise advice. If symptoms continue, recommend consulting a healthcare professional. If the user asks about medicine, you may suggest common treatments. This is for an educational project and not a substitute for professional medical advice."
             "content": 
 """
 You are a helpful medical assistant.
