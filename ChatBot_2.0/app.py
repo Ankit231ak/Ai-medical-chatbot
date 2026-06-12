@@ -110,12 +110,14 @@ with gr.Blocks(css=css) as app:
                     chat,
                     inputs=[msg, chatbot],
                     outputs=[msg, chatbot]
+                    , api_name="chat"
                 )
 
                 msg.submit(
                     chat,
                     inputs=[msg, chatbot],
                     outputs=[msg, chatbot]
+                    , api_name="chat_submit"
                 )
 
                 clear.click(lambda: [], None, chatbot, queue=False)
@@ -135,8 +137,9 @@ with gr.Blocks(css=css) as app:
                     detect,
                     inputs=image,
                     outputs=result
+                    , api_name="skin"
                 )
 
 
 app.queue()
-app.launch()
+app.launch(share=True)
